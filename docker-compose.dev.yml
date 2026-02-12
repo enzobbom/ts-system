@@ -1,0 +1,76 @@
+services:
+  bff:
+    build: ../bff
+    image: enzobbom/ts-bff:latest
+    ports:
+      - "8083:8083"
+    environment:
+      TS_USER_SERVICE_URI: http://user:8080/user
+      TS_TASK_SERVICE_URI: http://task-scheduler:8081/task
+      TS_NOTIFIER_SERVICE_URI: http://notifier:8082/email
+      TS_CRON_USER_EMAIL: ${TS_CRON_USER_EMAIL}
+      TS_CRON_USER_PASSWORD: ${TS_CRON_USER_PASSWORD}
+    depends_on:
+      - user
+      - task-scheduler
+      - notifier
+    restart: unless-stopped
+
+  user:
+    build: ../user
+    image: enzobbom/ts-user:latest
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ts_user
+      SPRING_DATASOURCE_USERNAME: ${TS_POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${TS_POSTGRES_PASSWORD}
+      TS_JWT_SECRET: ${TS_JWT_SECRET}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  task-scheduler:
+    build: ../task-scheduler
+    image: enzobbom/ts-task-scheduler:latest
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/ts_task_scheduler
+      TS_USER_SERVICE_URI: http://user:8080/user
+      TS_JWT_SECRET: ${TS_JWT_SECRET}
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  notifier:
+    build: ../notifier
+    image: enzobbom/ts-notifier:latest
+    ports:
+      - "8082:8082"
+    environment:
+      TS_SMTP_EMAIL: ${TS_SMTP_EMAIL:-}
+      TS_SMTP_PASSWORD: ${TS_SMTP_PASSWORD:-}
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TS_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TS_POSTGRES_PASSWORD}
+      POSTGRES_DB: ts_user
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ts_task_scheduler
+
+networks:
+  default:
+    driver: bridge
