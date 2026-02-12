@@ -1,3 +1,4 @@
+name: ts-system
 services:
   bff:
     image: enzobbom/ts-bff:latest
@@ -10,10 +11,19 @@ services:
       TS_CRON_USER_EMAIL: ${TS_CRON_USER_EMAIL}
       TS_CRON_USER_PASSWORD: ${TS_CRON_USER_PASSWORD}
     depends_on:
-      - user
-      - task-scheduler
-      - notifier
+      user:
+        condition: service_healthy
+      task-scheduler:
+        condition: service_healthy
+      notifier:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   user:
     image: enzobbom/ts-user:latest
@@ -25,8 +35,15 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${TS_POSTGRES_PASSWORD}
       TS_JWT_SECRET: ${TS_JWT_SECRET}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   task-scheduler:
     image: enzobbom/ts-task-scheduler:latest
@@ -37,8 +54,15 @@ services:
       TS_USER_SERVICE_URI: http://user:8080/user
       TS_JWT_SECRET: ${TS_JWT_SECRET}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   notifier:
     image: enzobbom/ts-notifier:latest
@@ -48,6 +72,12 @@ services:
       TS_SMTP_EMAIL: ${TS_SMTP_EMAIL:-}
       TS_SMTP_PASSWORD: ${TS_SMTP_PASSWORD:-}
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   postgres:
     image: postgres:14-alpine
@@ -56,12 +86,24 @@ services:
       POSTGRES_USER: ${TS_POSTGRES_USER}
       POSTGRES_PASSWORD: ${TS_POSTGRES_PASSWORD}
       POSTGRES_DB: ts_user
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${TS_POSTGRES_USER}", "-d", "ts_user"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   mongo:
     image: mongo:8
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: ts_task_scheduler
+    healthcheck:
+        test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+        interval: 30s
+        timeout: 5s
+        retries: 3
+        start_period: 15s
 
 networks:
   default:
