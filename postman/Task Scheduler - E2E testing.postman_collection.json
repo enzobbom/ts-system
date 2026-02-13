@@ -1,0 +1,520 @@
+{
+  "info": {
+    "_postman_id": "1ddc6040-ecb7-4843-abee-f9d94ebb0650",
+    "name": "Task Scheduler - E2E testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50657807",
+    "_collection_link": "https://go.postman.co/collection/50657807-1ddc6040-ecb7-4843-abee-f9d94ebb0650?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1 - Get address by CEP (BR Zip Code)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "",
+              "pm.collectionVariables.set(\"mainAddressStreet\", jsonData.street);",
+              "pm.collectionVariables.set(\"mainAddressCity\", jsonData.city);",
+              "pm.collectionVariables.set(\"mainAddressNeighbourhood\", jsonData.neighbourhood);",
+              "pm.collectionVariables.set(\"mainAddressState\", jsonData.state);",
+              "pm.collectionVariables.set(\"mainAddressCep\", jsonData.cep);",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/user/address/90020022",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "address",
+            "90020022"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2 - Create user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const requiredAddressVariables = [",
+              "    \"mainAddressStreet\",",
+              "    \"mainAddressCity\",",
+              "    \"mainAddressNeighbourhood\",",
+              "    \"mainAddressState\",",
+              "    \"mainAddressCep\"",
+              "];",
+              "",
+              "requiredAddressVariables.forEach(name => {",
+              "    const value = pm.collectionVariables.get(name);",
+              "",
+              "    if (!value) {",
+              "        throw new Error(",
+              "            `Missing required address variable \"${name}\". ",
+              "Run the address retrieval request first.`",
+              "        );",
+              "    }",
+              "});",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\" : \"Test User\",\n    \"email\" : \"{{email}}\",\n    \"password\" : \"{{password}}\",\n    \"addresses\": [\n    {\n      \"street\": \"{{mainAddressStreet}}\",\n      \"number\": 576,\n      \"complement\": \"Ground Floor\",\n      \"city\": \"{{mainAddressCity}}\",\n      \"neighbourhood\": \"{{mainAddressNeighbourhood}}\",\n      \"state\": \"{{mainAddressState}}\",\n      \"cep\": \"{{mainAddressCep}}\" // brazilian ZIP code\n    }\n  ],\n  \"phones\": [\n    {\n      \"countryCode\": \"55\",\n      \"areaCode\": \"55\",\n      \"number\": \"991911326\"\n    }\n  ]\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user"
+          ]
+        },
+        "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+      },
+      "response": []
+    },
+    {
+      "name": "3 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Login response status is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    let token = pm.response.text();",
+              "",
+              "    if (token) {",
+              "        pm.collectionVariables.set(\"authToken\", token);",
+              "        console.log(\"Auth token saved.\");",
+              "    } else {",
+              "        pm.collectionVariables.unset(\"authToken\");",
+              "        throw new Error(\"Login succeeded but accessToken not found.\");",
+              "    }",
+              "} else {",
+              "    pm.collectionVariables.unset(\"authToken\");",
+              "    console.log(\"Login failed. Token cleared.\");",
+              "}",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\" : \"{{email}}\", \n    \"password\" : \"{{password}}\"\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4 - Add new address to User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n      \"street\": \"Felipe Camarão\",\n      \"number\": 775,\n      \"complement\": \"Apt. 305\",\n      \"city\": \"Porto Alegre\",\n      \"neighbourhood\": \"Bom Fim\",\n      \"state\": \"Rio Grande do Sul\",\n      \"cep\": \"90035-141\"\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/address",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "address"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5 - Add new phone to User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n            \"countryCode\": \"31\",\n            \"areaCode\": \"06\",\n            \"number\": \"84552390\"\n        }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/phone",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "phone"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6 - Update existing User address",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"complement\" : \"Apt. 309\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/address?id=2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "address"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7 - Update existing User phone",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"areaCode\" : \"51\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/phone?id=1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "phone"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8 - Get User data by email",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/user?email=enzobom@gmail.com",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "enzobom@gmail.com"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9 - Create Task",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\" : \"Do something soon\",\n\"description\" : \"Task description\",\n\"scheduledDateTime\" : \"2026-03-01T12:00:00Z\", // set a time in the next 1 one hour to get notified by email (UTC time)\n\"timeZoneId\" : \"America/Sao_Paulo\"}           // set a valid IANA time zone (e.g.: \"Europe/Amsterdam\")",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/task",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "task"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 - Get tasks by user email (extracted from Token)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/task",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "task"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          "// public routes (no authentication needed)",
+          "",
+          "const publicRoutes = [",
+          "    { method: \"POST\", path: \"/user\", exact: true }, ",
+          "    { method: \"POST\", path: \"/user/login\", exact: true },",
+          "    { method: \"GET\", path: \"/user/address\", exact: false } // dynamic: user/address/{cep}",
+          "];",
+          "",
+          "// details of the current request",
+          "",
+          "const requestMethod = pm.request.method;",
+          "const requestPath = pm.request.url.getPath(); ",
+          "",
+          "// checking if request is public",
+          "",
+          "const isPublic = publicRoutes.some(route => {",
+          "    if (route.method !== requestMethod) return false;",
+          "",
+          "    return route.exact",
+          "        ? requestPath === route.path",
+          "        : requestPath.startsWith(route.path);",
+          "});",
+          "",
+          "// requesting authentication if not",
+          "",
+          "if (!isPublic) {",
+          "    const token = pm.collectionVariables.get(\"authToken\");",
+          "",
+          "    if (!token) {",
+          "        throw new Error(",
+          "            `Authentication required for ${requestMethod} ${requestPath}.",
+          "Please login first.`",
+          "        );",
+          "    }",
+          "",
+          "    pm.request.headers.upsert({",
+          "        key: \"Authorization\",",
+          "        value: `${token}`",
+          "    });",
+          "}",
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    }
+  ]
+}
