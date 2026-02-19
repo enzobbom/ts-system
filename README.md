@@ -175,7 +175,7 @@ git clone git@github.com:enzobbom/ts-system.git
 cd ts-system
 ```
 
-For cloning other repositories, visit their pages specified at #architecture.
+For cloning other repositories, visit their pages specified at the [Architecture](#-architecture) section.
 
 ---
 
