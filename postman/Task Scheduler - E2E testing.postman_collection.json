@@ -363,7 +363,7 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/user?email=enzobom@gmail.com",
+          "raw": "{{baseUrl}}/user?email={{email}}",
           "host": [
             "{{baseUrl}}"
           ],
@@ -373,7 +373,7 @@
           "query": [
             {
               "key": "email",
-              "value": "enzobom@gmail.com"
+              "value": "{{email}}"
             }
           ]
         }
