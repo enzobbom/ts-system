@@ -1,0 +1,101 @@
+{
+  "vhosts": [
+    {
+      "name": "ts-system"
+    }
+  ],
+
+  "users": [
+    {
+      "name": "task-scheduler",
+      "password_hash": "kab8VMttdIUXZTiqrBuiRwLD46OMF0ZoRzket/DA+GpUdm+u",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ""
+    },
+    {
+      "name": "notifier",
+      "password_hash": "o6KfvMwUkV6d5kEJNHYZ7ibDmiTgZY1EmVHOvfsl+l/ISKi+",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ""
+    }
+  ],
+
+  "permissions": [
+    {
+      "user": "task-scheduler",
+      "vhost": "ts-system",
+      "configure": "^$",
+      "write": "^notification\\.exchange$",
+      "read": "^notification\\.(completed|failed)\\.queue$"
+    },
+    {
+      "user": "notifier",
+      "vhost": "ts-system",
+      "configure": "^$",
+      "write": "^notification\\.exchange$",
+      "read": "^notification\\.request\\.queue$"
+    }
+  ],
+
+  "exchanges": [
+    {
+      "name": "notification.exchange",
+      "vhost": "ts-system",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+
+  "queues": [
+    {
+      "name": "notification.request.queue",
+      "vhost": "ts-system",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "notification.completed.queue",
+      "vhost": "ts-system",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "notification.failed.queue",
+      "vhost": "ts-system",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+
+  "bindings": [
+    {
+      "vhost": "ts-system",
+      "source": "notification.exchange",
+      "destination": "notification.request.queue",
+      "destination_type": "queue",
+      "routing_key": "notification.request",
+      "arguments": {}
+    },
+    {
+      "vhost": "ts-system",
+      "source": "notification.exchange",
+      "destination": "notification.completed.queue",
+      "destination_type": "queue",
+      "routing_key": "notification.completed",
+      "arguments": {}
+    },
+    {
+      "vhost": "ts-system",
+      "source": "notification.exchange",
+      "destination": "notification.failed.queue",
+      "destination_type": "queue",
+      "routing_key": "notification.failed",
+      "arguments": {}
+    }
+  ]
+}
