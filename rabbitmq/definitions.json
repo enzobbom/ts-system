@@ -7,20 +7,33 @@
 
   "users": [
     {
+      "name": "admin",
+      "password_hash": "7Em3lKIvIWBZfeUlOpodIiqyw5glulFA1AHmVFMVI0bTUrXp",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    },
+    {
       "name": "task-scheduler",
-      "password_hash": "kab8VMttdIUXZTiqrBuiRwLD46OMF0ZoRzket/DA+GpUdm+u",
+      "password_hash": "NUC4MX1rjT4GK20jvMjXR5503k7HIuj7612TbAg6zMtYHiur",
       "hashing_algorithm": "rabbit_password_hashing_sha256",
       "tags": ""
     },
     {
       "name": "notifier",
-      "password_hash": "o6KfvMwUkV6d5kEJNHYZ7ibDmiTgZY1EmVHOvfsl+l/ISKi+",
+      "password_hash": "w7MDTKORjjUz7M32F0XZZZc4zBb+W8PYeYgX/euUTSaVFJBz",
       "hashing_algorithm": "rabbit_password_hashing_sha256",
       "tags": ""
     }
   ],
 
   "permissions": [
+    {
+      "user": "admin",
+      "vhost": "ts-system",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
     {
       "user": "task-scheduler",
       "vhost": "ts-system",
