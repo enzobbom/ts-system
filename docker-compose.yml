@@ -8,8 +8,6 @@ services:
       TS_USER_SERVICE_URI: http://user:8080/user
       TS_TASK_SERVICE_URI: http://task-scheduler:8081/task
       TS_NOTIFIER_SERVICE_URI: http://notifier:8082/email
-      TS_CRON_USER_EMAIL: ${TS_CRON_USER_EMAIL}
-      TS_CRON_USER_PASSWORD: ${TS_CRON_USER_PASSWORD}
     depends_on:
       user:
         condition: service_healthy
