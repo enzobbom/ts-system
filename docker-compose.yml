@@ -1,19 +1,18 @@
 name: ts-system
 services:
-  bff:
-    image: enzobbom/ts-bff:latest
-    ports:
-      - "8083:8083"
+
+  gateway:
+    image: enzobbom/ts-gateway:latest
+    expose:
+      - "8083"
     environment:
-      TS_USER_SERVICE_URI: http://user:8080/user
-      TS_TASK_SERVICE_URI: http://task-scheduler:8081/task
-      TS_NOTIFIER_SERVICE_URI: http://notifier:8082/email
+      TS_USER_SERVICE_URI: http://user:8080
+      TS_TASK_SERVICE_URI: http://task-scheduler:8081
+      TS_JWT_SECRET: ${TS_JWT_SECRET}
     depends_on:
       user:
         condition: service_healthy
       task-scheduler:
-        condition: service_healthy
-      notifier:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -25,13 +24,13 @@ services:
 
   user:
     image: enzobbom/ts-user:latest
-    ports:
-      - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ts_user
-      SPRING_DATASOURCE_USERNAME: ${TS_POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${TS_POSTGRES_PASSWORD}
+      TS_POSTGRES_HOST: postgres
+      TS_POSTGRES_USER: ${TS_POSTGRES_USER}
+      TS_POSTGRES_PASSWORD: ${TS_POSTGRES_PASSWORD}
+      TS_SHOW_SQL: false
       TS_JWT_SECRET: ${TS_JWT_SECRET}
+      TS_JWT_EXPIRATION: ${TS_JWT_EXPIRATION}
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,17 +44,14 @@ services:
 
   task-scheduler:
     image: enzobbom/ts-task-scheduler:latest
-    ports:
-      - "8081:8081"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/ts_task_scheduler
-      TS_USER_SERVICE_URI: http://user:8080/user
-      TS_JWT_SECRET: ${TS_JWT_SECRET}
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: task-scheduler
-      SPRING_RABBITMQ_PASSWORD: ${TS_RABBITMQ_TASK_SCHEDULER_PASSWORD}
-      SPRING_RABBITMQ_VIRTUAL_HOST: ts-system
+      TS_MONGO_HOST: mongo
+      TS_MONGO_USER: ${TS_MONGO_USER}
+      TS_MONGO_PASSWORD: ${TS_MONGO_PASSWORD}
+      TS_RABBITMQ_HOST: rabbitmq
+      TS_RABBITMQ_VHOST: ${TS_RABBITMQ_VHOST}
+      TS_RABBITMQ_TASK_USER: ${TS_RABBITMQ_TASK_USER}
+      TS_RABBITMQ_TASK_PASSWORD: ${TS_RABBITMQ_TASK_PASSWORD}
     depends_on:
       mongo:
         condition: service_healthy
@@ -71,16 +67,14 @@ services:
 
   notifier:
     image: enzobbom/ts-notifier:latest
-    ports:
-      - "8082:8082"
     environment:
       TS_SMTP_EMAIL: ${TS_SMTP_EMAIL:-}
       TS_SMTP_PASSWORD: ${TS_SMTP_PASSWORD:-}
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: notifier
-      SPRING_RABBITMQ_PASSWORD: ${TS_RABBITMQ_NOTIFIER_PASSWORD}
-      SPRING_RABBITMQ_VIRTUAL_HOST: ts-system
+      TS_RABBITMQ_HOST: rabbitmq
+      TS_RABBITMQ_PORT: 5672
+      TS_RABBITMQ_VHOST: ${TS_RABBITMQ_VHOST}
+      TS_RABBITMQ_NOTIFIER_USER: ${TS_RABBITMQ_NOTIFIER_USER}
+      TS_RABBITMQ_NOTIFIER_PASSWORD: ${TS_RABBITMQ_NOTIFIER_PASSWORD}
     depends_on:
         rabbitmq:
           condition: service_healthy
@@ -110,6 +104,8 @@ services:
     image: mongo:8
     restart: unless-stopped
     environment:
+      MONGO_INITDB_ROOT_USERNAME: ${TS_MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${TS_MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ts_task_scheduler
     healthcheck:
         test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
