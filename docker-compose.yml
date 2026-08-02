@@ -45,6 +45,7 @@ services:
   task:
     image: enzobbom/ts-task:latest
     environment:
+      TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY: ${TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY}
       TS_MONGO_HOST: mongo
       TS_MONGO_USER: ${TS_MONGO_USER}
       TS_MONGO_PASSWORD: ${TS_MONGO_PASSWORD}
