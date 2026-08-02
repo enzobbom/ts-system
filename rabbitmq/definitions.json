@@ -13,13 +13,13 @@
       "tags": "administrator"
     },
     {
-      "name": "task",
+      "name": "ts-task",
       "password_hash": "NUC4MX1rjT4GK20jvMjXR5503k7HIuj7612TbAg6zMtYHiur",
       "hashing_algorithm": "rabbit_password_hashing_sha256",
       "tags": ""
     },
     {
-      "name": "notifier",
+      "name": "ts-notifier",
       "password_hash": "w7MDTKORjjUz7M32F0XZZZc4zBb+W8PYeYgX/euUTSaVFJBz",
       "hashing_algorithm": "rabbit_password_hashing_sha256",
       "tags": ""
@@ -35,14 +35,14 @@
       "read": ".*"
     },
     {
-      "user": "task",
+      "user": "ts-task",
       "vhost": "ts-system",
       "configure": "^$",
       "write": "^notification\\.exchange$",
       "read": "^notification\\.(completed|failed)\\.queue$"
     },
     {
-      "user": "notifier",
+      "user": "ts-notifier",
       "vhost": "ts-system",
       "configure": "^$",
       "write": "^notification\\.exchange$",

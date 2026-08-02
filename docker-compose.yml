@@ -107,7 +107,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${TS_MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${TS_MONGO_PASSWORD}
-      MONGO_INITDB_DATABASE: ts_task_scheduler
+      MONGO_INITDB_DATABASE: ts_task
     healthcheck:
         test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
         interval: 30s
