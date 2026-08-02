@@ -13,7 +13,7 @@
       "tags": "administrator"
     },
     {
-      "name": "task-scheduler",
+      "name": "task",
       "password_hash": "NUC4MX1rjT4GK20jvMjXR5503k7HIuj7612TbAg6zMtYHiur",
       "hashing_algorithm": "rabbit_password_hashing_sha256",
       "tags": ""
@@ -35,7 +35,7 @@
       "read": ".*"
     },
     {
-      "user": "task-scheduler",
+      "user": "task",
       "vhost": "ts-system",
       "configure": "^$",
       "write": "^notification\\.exchange$",

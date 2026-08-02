@@ -7,8 +7,8 @@ services:
     ports:
       - "8080:8080"
 
-  task-scheduler:
-    build: ../task-scheduler
+  task:
+    build: ../task
     ports:
       - "8081:8081"
 

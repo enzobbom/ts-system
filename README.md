@@ -33,12 +33,12 @@ It provides:
 
 The Task Scheduler platform consists of four backend services:
 
-| Service                    | Repository                                    |
-|----------------------------|-----------------------------------------------|
-| BFF (Backend for Frontend) | https://github.com/enzobbom/ts-bff            |
-| User Service               | https://github.com/enzobbom/ts-user           |
-| Task Scheduler Service     | https://github.com/enzobbom/ts-task-scheduler |
-| Notifier Service           | https://github.com/enzobbom/ts-notifier       |
+| Service                   | Repository                          |
+|---------------------------|-------------------------------------|
+| BFF (Backend for Frontend) | https://github.com/enzobbom/ts-bff  |
+| User Service              | https://github.com/enzobbom/ts-user |
+| Task Service     | https://github.com/enzobbom/ts-task |
+| Notifier Service          | https://github.com/enzobbom/ts-notifier |
 
 All services are containerized and orchestrated via Docker Compose.
 

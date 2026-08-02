@@ -7,12 +7,12 @@ services:
       - "8083"
     environment:
       TS_USER_SERVICE_URI: http://user:8080
-      TS_TASK_SERVICE_URI: http://task-scheduler:8081
+      TS_TASK_SERVICE_URI: http://task:8081
       TS_JWT_SECRET: ${TS_JWT_SECRET}
     depends_on:
       user:
         condition: service_healthy
-      task-scheduler:
+      task:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -42,8 +42,8 @@ services:
       retries: 3
       start_period: 15s
 
-  task-scheduler:
-    image: enzobbom/ts-task-scheduler:latest
+  task:
+    image: enzobbom/ts-task:latest
     environment:
       TS_MONGO_HOST: mongo
       TS_MONGO_USER: ${TS_MONGO_USER}
