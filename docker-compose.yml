@@ -3,6 +3,8 @@ services:
 
   gateway:
     image: enzobbom/ts-gateway:latest
+    networks:
+      - ts-internal
     expose:
       - "8083"
     environment:
@@ -24,6 +26,8 @@ services:
 
   user:
     image: enzobbom/ts-user:latest
+    networks:
+      - ts-internal
     environment:
       TS_POSTGRES_HOST: postgres
       TS_POSTGRES_USER: ${TS_POSTGRES_USER}
@@ -44,6 +48,8 @@ services:
 
   task:
     image: enzobbom/ts-task:latest
+    networks:
+      - ts-internal
     environment:
       TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY: ${TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY}
       TS_MONGO_HOST: mongo
@@ -68,6 +74,8 @@ services:
 
   notifier:
     image: enzobbom/ts-notifier:latest
+    networks:
+      - ts-internal
     environment:
       TS_SMTP_EMAIL: ${TS_SMTP_EMAIL:-}
       TS_SMTP_PASSWORD: ${TS_SMTP_PASSWORD:-}
@@ -89,11 +97,15 @@ services:
 
   postgres:
     image: postgres:14-alpine
-    restart: unless-stopped
+    networks:
+      - ts-internal
     environment:
       POSTGRES_USER: ${TS_POSTGRES_USER}
       POSTGRES_PASSWORD: ${TS_POSTGRES_PASSWORD}
       POSTGRES_DB: ts_user
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${TS_POSTGRES_USER}", "-d", "ts_user"]
       interval: 30s
@@ -103,11 +115,15 @@ services:
 
   mongo:
     image: mongo:8
-    restart: unless-stopped
+    networks:
+      - ts-internal
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${TS_MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${TS_MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ts_task
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
     healthcheck:
         test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
         interval: 30s
@@ -117,8 +133,11 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management
+    networks:
+      - ts-internal
     restart: unless-stopped
     volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
     healthcheck:
@@ -127,6 +146,11 @@ services:
       timeout: 5s
       retries: 3
 
+volumes:
+  postgres_data:
+  mongo_data:
+  rabbitmq_data:
+
 networks:
-  default:
+  ts-internal:
     driver: bridge
