@@ -31,11 +31,13 @@ services:
       - ts-internal
     environment:
       TS_POSTGRES_HOST: postgres
-      TS_POSTGRES_USER: ${TS_POSTGRES_USER}
+      TS_POSTGRES_PORT: 5432
+      TS_POSTGRES_DB: ts_user
+      TS_POSTGRES_USER: ts_user
       TS_POSTGRES_PASSWORD: ${TS_POSTGRES_PASSWORD}
       TS_SHOW_SQL: false
       TS_JWT_SECRET: ${TS_JWT_SECRET}
-      TS_JWT_EXPIRATION: ${TS_JWT_EXPIRATION}
+      TS_JWT_EXPIRATION: 900000
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,13 +55,16 @@ services:
     networks:
       - ts-internal
     environment:
-      TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY: ${TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY}
+      TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY: "0 */5 * * * *"
       TS_MONGO_HOST: mongo
-      TS_MONGO_USER: ${TS_MONGO_USER}
+      TS_MONGO_PORT: 27017
+      TS_MONGO_DB: ts_task
+      TS_MONGO_USER: ts_task
       TS_MONGO_PASSWORD: ${TS_MONGO_PASSWORD}
       TS_RABBITMQ_HOST: rabbitmq
-      TS_RABBITMQ_VHOST: ${TS_RABBITMQ_VHOST}
-      TS_RABBITMQ_TASK_USER: ${TS_RABBITMQ_TASK_USER}
+      TS_RABBITMQ_PORT: 5672
+      TS_RABBITMQ_VHOST: ts-system
+      TS_RABBITMQ_TASK_USER: ts-task
       TS_RABBITMQ_TASK_PASSWORD: ${TS_RABBITMQ_TASK_PASSWORD}
     depends_on:
       mongo:
@@ -80,12 +85,12 @@ services:
     networks:
       - ts-internal
     environment:
-      TS_SMTP_EMAIL: ${TS_SMTP_EMAIL:-}
-      TS_SMTP_PASSWORD: ${TS_SMTP_PASSWORD:-}
+      TS_SMTP_EMAIL: ${TS_SMTP_EMAIL}
+      TS_SMTP_PASSWORD: ${TS_SMTP_PASSWORD}
       TS_RABBITMQ_HOST: rabbitmq
       TS_RABBITMQ_PORT: 5672
-      TS_RABBITMQ_VHOST: ${TS_RABBITMQ_VHOST}
-      TS_RABBITMQ_NOTIFIER_USER: ${TS_RABBITMQ_NOTIFIER_USER}
+      TS_RABBITMQ_VHOST: ts-system
+      TS_RABBITMQ_NOTIFIER_USER: ts-notifier
       TS_RABBITMQ_NOTIFIER_PASSWORD: ${TS_RABBITMQ_NOTIFIER_PASSWORD}
     depends_on:
         rabbitmq:
@@ -104,14 +109,14 @@ services:
     networks:
       - ts-internal
     environment:
-      POSTGRES_USER: ${TS_POSTGRES_USER}
+      POSTGRES_USER: ts_user
       POSTGRES_PASSWORD: ${TS_POSTGRES_PASSWORD}
       POSTGRES_DB: ts_user
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${TS_POSTGRES_USER}", "-d", "ts_user"]
+      test: ["CMD", "pg_isready", "-U", "ts_user", "-d", "ts_user"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -123,7 +128,7 @@ services:
     networks:
       - ts-internal
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${TS_MONGO_USER}
+      MONGO_INITDB_ROOT_USERNAME: ts_task
       MONGO_INITDB_ROOT_PASSWORD: ${TS_MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ts_task
     volumes:
