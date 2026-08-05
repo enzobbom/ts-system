@@ -23,6 +23,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    mem_limit: 256m
 
   user:
     image: enzobbom/ts-user:latest
@@ -45,6 +46,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    mem_limit: 384m
 
   task:
     image: enzobbom/ts-task:latest
@@ -71,6 +73,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    mem_limit: 384m
 
   notifier:
     image: enzobbom/ts-notifier:latest
@@ -94,6 +97,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    mem_limit: 256m
 
   postgres:
     image: postgres:14-alpine
@@ -112,6 +116,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    mem_limit: 256m
 
   mongo:
     image: mongo:8
@@ -125,11 +130,12 @@ services:
       - mongo_data:/data/db
     restart: unless-stopped
     healthcheck:
-        test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
-        interval: 30s
-        timeout: 5s
-        retries: 3
-        start_period: 15s
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    mem_limit: 256m
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -145,6 +151,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    mem_limit: 256m
 
 volumes:
   postgres_data:
