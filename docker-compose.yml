@@ -2,7 +2,7 @@ name: ts-system
 services:
 
   gateway:
-    image: enzobbom/ts-gateway:latest
+    image: ghcr.io/enzobbom/ts-gateway:sha-1111111
     networks:
       - ts-internal
     expose:
@@ -26,7 +26,7 @@ services:
     mem_limit: 256m
 
   user:
-    image: enzobbom/ts-user:latest
+    image: ghcr.io/enzobbom/ts-user:sha-1111111
     networks:
       - ts-internal
     environment:
@@ -51,7 +51,7 @@ services:
     mem_limit: 384m
 
   task:
-    image: enzobbom/ts-task:latest
+    image: ghcr.io/enzobbom/ts-task:sha-1111111
     networks:
       - ts-internal
     environment:
@@ -81,7 +81,7 @@ services:
     mem_limit: 384m
 
   notifier:
-    image: enzobbom/ts-notifier:latest
+    image: ghcr.io/enzobbom/ts-notifier:sha-1111111
     networks:
       - ts-internal
     environment:
