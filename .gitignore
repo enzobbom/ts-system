@@ -39,3 +39,4 @@ build/
 README-dev.md
 docker-compose.dev.yml
 /rabbitmq/definitions-dev.json
+/postman/
