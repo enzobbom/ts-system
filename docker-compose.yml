@@ -26,7 +26,7 @@ services:
     mem_limit: 256m
 
   user:
-    image: ghcr.io/enzobbom/ts-user:sha-1111111
+    image: ghcr.io/enzobbom/ts-user:sha-test123
     networks:
       - ts-internal
     environment:
