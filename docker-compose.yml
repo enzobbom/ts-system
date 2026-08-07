@@ -81,7 +81,7 @@ services:
     mem_limit: 384m
 
   notifier:
-    image: ghcr.io/enzobbom/ts-notifier:sha-1111111
+    image: ghcr.io/enzobbom/ts-notifier:sha-93c2852
     networks:
       - ts-internal
     environment:
