@@ -1,31 +1,37 @@
-# Task Scheduler — System Repository
+# Task Scheduler Platform — System Repository
 
 System repository responsible for orchestrating the Task Scheduler platform using Docker Compose.
 
-The platform is composed of multiple backend microservices that together implement authentication, task scheduling, notification delivery, and external API integration.
+The platform is a microservice-based backend system designed for task scheduling, user management, authentication, and automated notification delivery.
 
 ---
 
 # 📌 Project Overview
 
-This repository acts as the orchestration layer for the entire microservices-based backend system.
+This repository acts as the infrastructure and orchestration layer of the Task Scheduler platform.
 
 It provides:
 
-- Container orchestration via Docker Compose
-- Centralized environment configuration
-- Unified startup process
-- Development and production execution functionalities
+* Docker Compose based service orchestration
+* Production container configuration
+* Centralized runtime environment configuration
+* Service networking and dependency management
+* Deployment integration with the container registry and VPS environment
 
-## 🧠 Design Principles
+The platform follows a Docker-first architecture, where each backend service is independently built, versioned, and deployed as a container image.
 
-- Separation of concerns
-- Centralized authentication
-- Docker-first execution model
-- UTC time standardization
-- Fail-safe email strategy
-- Explicit DTO boundaries
-- Centralized error handling
+---
+
+# 🧠 Design Principles
+
+* Separation of concerns between business domains
+* Centralized authentication through an API Gateway
+* Independent microservice lifecycle
+* Event-driven communication where asynchronous processing is required
+* Explicit API contracts between services
+* Centralized error handling strategy
+* UTC time standardization
+* Fail-safe notification delivery strategy
 
 ---
 
@@ -33,43 +39,53 @@ It provides:
 
 The Task Scheduler platform consists of four backend services:
 
-| Service                   | Repository                          |
-|---------------------------|-------------------------------------|
-| BFF (Backend for Frontend) | https://github.com/enzobbom/ts-bff  |
-| User Service              | https://github.com/enzobbom/ts-user |
-| Task Service     | https://github.com/enzobbom/ts-task |
-| Notifier Service          | https://github.com/enzobbom/ts-notifier |
+| Service          | Repository                              |
+| ---------------- | --------------------------------------- |
+| Gateway Service  | https://github.com/enzobbom/ts-gateway  |
+| User Service     | https://github.com/enzobbom/ts-user     |
+| Task Service     | https://github.com/enzobbom/ts-task     |
+| Notifier Service | https://github.com/enzobbom/ts-notifier |
 
-All services are containerized and orchestrated via Docker Compose.
+All services are containerized and orchestrated through Docker Compose.
+
+Container images are published to GitHub Container Registry (GHCR) and deployed to a VPS environment.
 
 ```mermaid
 flowchart TB
 
-    Client[Client / Frontend]
+    Client["Client / Frontend"]
 
-    BFF[BFF]
+    ViaCep["ViaCep API"]
+    SMTP["SMTP Server"]
 
-    subgraph Microservices
-        User[User Service]
-        Task[Task Scheduler Service]
-        Notifier[Notifier Service]
+    subgraph VPS["VPS"]
+        subgraph VPS2[" "]
+            ReverseProxy["Reverse Proxy"]
+        Gateway["Gateway Service"]
+        User["User Service"]
+        Task["Task Scheduler Service"]
+        Notifier["Notifier Service"]
+        Postgres[(PostgreSQL)]
+        Mongo[(MongoDB)]
+        RabbitMQ[(RabbitMQ)]
+        end
     end
 
-    Postgres[(PostgreSQL)]
-    Mongo[(MongoDB)]
-
-    ViaCep[ViaCep API]
-    SMTP[SMTP Server]
-
-    Client --> BFF
-    BFF --> User
-    BFF --> Task
-    BFF --> Notifier
-
-    User --> Postgres
-    Task --> Mongo
+    ReverseProxy --> Gateway
 
     User --> ViaCep
+    User --> Postgres
+
+    Gateway --> User
+    Gateway --> Task
+    Gateway --> Notifier
+
+    Task --> Mongo
+    Task --> RabbitMQ
+    
+    RabbitMQ --> Notifier
+
+    Client -->|HTTPS| ReverseProxy
     Notifier --> SMTP
 ```
 
@@ -77,325 +93,271 @@ flowchart TB
 
 ## 🔎 Service Responsibilities
 
-### BFF (Backend for Frontend)
+### Gateway Service
 
-- Public API entry point
-- Swagger documentation
-- Communicates with downstream services using OpenFeign
-- Runs scheduled Cron job:
-    - Checks tasks scheduled within the next hour
-    - Calls Notifier to send reminder emails
+The single entry point of the platform.
+
+Responsibilities:
+
+* Routes incoming requests to internal services
+* Validates JWT authentication
+* Propagates authenticated user context to downstream services
+* Aggregates OpenAPI documentation
+* Centralizes API access policies
+
+---
 
 ### User Service
 
-- Manages:
-    - Users
-    - Phones
-    - Addresses
-- JWT authentication (Spring Security)
-- Generates token on login
-- Validates protected endpoints
-- Integrates with ViaCep API for Brazilian CEP lookup
+Responsible for user management and authentication.
+
+Responsibilities:
+
+* User registration and management (including Address and Phone details)
+* JWT generation during authentication
+* Spring Security based authentication flow
+* Brazilian CEP (Postal Code) lookup integration through ViaCep API
+
+---
 
 ### Task Scheduler Service
 
-- Creates, updates, deletes tasks
-- All endpoints require authentication
-- Validates JWT via User Service
+Responsible for task lifecycle management and scheduling logic.
+
+Responsibilities:
+
+* Creates, updates, retrieves, and deletes tasks
+* Stores scheduled tasks
+* Identifies tasks ready for notification
+* Publishes notification requests through RabbitMQ
+* Manages notification delivery state and retry logic
+
+---
 
 ### Notifier Service
 
-- Single endpoint for sending reminder emails
-- Uses SMTP Server (JavaMailSender)
-- Falls back to NoOp email service if credentials are not provided
+Responsible for notification delivery.
+
+Responsibilities:
+
+* Consumes notification events from RabbitMQ
+* Sends reminder emails through SMTP
+* Tracks notification success or failure
+* Provides fail-safe behaviour when email configuration is unavailable
 
 ---
 
-## 🔐 Security Model
+# 🔐 Security Model
 
-- JWT-based authentication
-- Token issued by User Service
-- Token required for protected endpoints
+The platform uses a centralized JWT authentication strategy.
+
+Authentication flow:
+
+1. User authenticates through the User Service.
+2. User Service generates a JWT token.
+3. Client sends authenticated requests through the Gateway.
+4. Gateway validates the JWT.
+5. Gateway forwards authenticated user information to internal services.
+
+Internal services are not directly exposed as public entry points.
 
 ---
 
-## 🔄 Error Handling Strategy
+# 🔄 Communication Strategy
 
-- Global exception handler per service
-- Feign Error Decoder at BFF level
-- HTTP-based error propagation
+The platform uses different communication approaches depending on the use case.
+
+## Synchronous Communication
+
+Used for request/response operations:
+
+* Gateway → User Service
+* Gateway → Task Service
+* Gateway → Notifier Service
+
+Implemented through HTTP APIs.
 
 ---
 
-# ⚙️ Environment Variables
+## Asynchronous Communication
 
-All variables are documented in `.env.example`.
+Used for notification processing:
+
+* Task Service publishes notification requests.
+* Notifier Service consumes notification events.
+* Notifier Service publishes processing results.
+
+---
+
+# 📦 Container Deployment
+
+The platform is deployed as a collection of Docker containers.
+
+Container images are built independently for each service and published to:
+
+* GitHub Container Registry (GHCR)
+
+The system repository references the required image versions through Docker Compose configuration.
+
+Deployment flow:
+
+```mermaid
+flowchart LR
+
+    Services[Service Repositories]
+
+    Actions[GitHub Actions]
+
+    GHCR[GitHub Container Registry]
+
+    System[ts-system Repository]
+
+    VPS[VPS Environment]
+
+    Services --> Actions
+    Actions --> GHCR
+
+    GHCR --> System
+
+    System --> VPS
+```
+
+When service images are updated, the system repository updates Docker Compose image references and triggers deployment on the VPS environment.
+
+---
+
+# 🌐 Production Environment
+
+The platform runs on a VPS environment using:
+
+* Docker Engine
+* Docker Compose
+* Nginx reverse proxy
+* HTTPS certificates
+* GitHub Container Registry images
+
+External traffic reaches the platform through the reverse proxy, which forwards requests to the Gateway service.
+
+Only the Gateway service is publicly accessible.
+
+Internal services communicate through the Docker network.
+
+---
+
+# ⚙️ Environment Configuration
+
+Runtime configuration is provided through environment variables.
+
+Sensitive values are stored outside the repository and injected into the deployment environment.
+
+Main configuration groups:
 
 ## Security
-- TS_JWT_SECRET
 
-## Cron User
-- TS_CRON_USER_EMAIL
-- TS_CRON_USER_PASSWORD
-
-## Email (Optional)
-- TS_SMTP_EMAIL
-- TS_SMTP_PASSWORD
+* JWT secret configuration
 
 ## Database
-- TS_POSTGRES_USER
-- TS_POSTGRES_PASSWORD
 
-If SMTP credentials are not defined, a NoOp email sender is used.
+* PostgreSQL credentials
+* MongoDB credentials
 
----
+## Messaging
 
-# 🚀 Running the Software
+* RabbitMQ credentials
 
-The platform can be executed in two ways:
+## Notification
 
-- **Docker mode (recommended)** – run the entire system using only this repository.
-- **Local development mode** – run each microservice individually for debugging and development.
-
-The setup steps are identical until Step 3.
+* SMTP credentials
 
 ---
 
-## 1️⃣ Clone
+# 🐳 Docker Services
 
-### HTTPS
-```bash
-git clone https://github.com/enzobbom/ts-system.git
-cd ts-system
-```
+| Service        | Container Port | Description                        |
+| -------------- | -------------- | ---------------------------------- |
+| Gateway        | 8083           | Public API entry point             |
+| User           | 8080           | Authentication and user management |
+| Task Scheduler | 8081           | Task management and scheduling     |
+| Notifier       | 8082           | Notification processing            |
+| PostgreSQL     | 5432           | User relational database           |
+| MongoDB        | 27017          | Task document database             |
+| RabbitMQ       | 5672           | Message broker                     |
 
-### SSH
-```bash
-git clone git@github.com:enzobbom/ts-system.git
-cd ts-system
-```
-
-For cloning other repositories, visit their pages specified at the [Architecture](#-architecture) section.
+Database and messaging services are internal infrastructure components and are not exposed externally.
 
 ---
 
-## 2️⃣ Configure Environment
+# 🌐 API Documentation
 
-Create your local environment configuration file:
+The Gateway service provides the unified API documentation entry point.
 
-```bash
-cp .env.example .env
-```
-
-Then open the `.env` file and replace the placeholder values with your own configuration (JWT secret, database credentials, email settings, etc.).
-
-Docker Compose automatically loads variables from the `.env` file.
+Swagger documentation is aggregated from backend services and exposed through the Gateway.
 
 ---
 
-## 3️⃣ Start the System
+# 📦 Shared Libraries
 
-### 🐳 Option A — Docker Mode (Recommended)
+The platform uses shared libraries to maintain consistency between microservices.
 
-This is the fastest way to run the entire application.  
-Only this repository is required.
+## ts-api-contract
 
-Start all services:
+Provides shared API contracts between services:
 
-```bash
-docker compose up -d
-```
+* Standard success and error response structures
+* API URI versioning structure
+* Shared authentication-related HTTP headers
 
-To stop:
+## ts-events
 
-```bash
-docker compose down
-```
+Provides shared messaging contracts between services:
 
----
+* Notification lifecycle events (request, completion, and failure)
+* Shared resource identifiers
 
-### 🛠 Option B — Local Development Mode
+# 📘 Technology Stack
 
-Intended for developers who want full control and service-level debugging.
+## ☕ Backend
 
-Requirements:
-
-- Clone each individual microservice repository
-- Configure environment variables (same variables defined in `.env`) either:
-    - In your operating system, or
-    - In your IDE run configuration
-- Ensure PostgreSQL and MongoDB are running
-- Start services in the correct dependency order
-
-This mode allows full debugging and independent service execution.
-
-If you still want to use Docker Compose with the development override file:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-```
-
-For other Docker Compose commands in development mode:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml <command>
-```
+* Java 17
+* Spring Boot 4 (Spring Framework 7)
+* Spring Security
+* Spring Data JPA
+* Spring Data MongoDB
+* Spring Cloud Gateway
+* OpenFeign
 
 ---
 
-# 🌐 Swagger Documentation
+## 🐳 Infrastructure
 
-After starting the system:
-
-| Service | Swagger URL |
-|----------|-------------|
-| BFF | http://localhost:8083/swagger-ui.html |
-
----
-
-# 🐳 Docker & Ports
-
-| Service | Container Port | Host Port | Description |
-|----------|---------------|------------|-------------|
-| BFF | 8083 | 8083 | Public API |
-| User | 8080 | 8080 | Authentication & user management |
-| Task Scheduler | 8081 | 8081 | Task operations |
-| Notifier | 8082 | 8082 | Email notification |
-| PostgreSQL | 5432 | 5432 | Relational database |
-| MongoDB | 27017 | 27017 | Document database |
-
-Database services are not exposed via HTTP.  
-They are accessible via their respective ports for development purposes.
+* Docker
+* Docker Compose
+* GitHub Actions
+* GitHub Container Registry (GHCR)
 
 ---
 
-# 🧪 Testing
+## 🗄 Databases & Messaging
 
-The system can be tested using:
-
-- The included Postman collection (recommended)
-- Swagger UI
-- Direct HTTP calls (curl, HTTPie, etc.)
+* PostgreSQL
+* MongoDB
+* RabbitMQ
 
 ---
 
-## 📬 Postman Collection – End-to-End Testing
+## 🔧 Build Tools
 
-This repository includes a Postman collection demonstrating the backend flow end-to-end.
-
-### Setup
-
-Import:
-
-```
-./postman/Task Scheduler - E2E testing.postman_collection.json
-```
-
-into Postman.
-
-### Collection Variables
-
-- `baseUrl` → `http://localhost:8083`
-- `email` → User email for registration/login
-- `password` → User password
-
-### Automatic Variable Handling
-
-**authToken**
-- Created automatically after login
-- Injected into protected endpoints
-- Cleared if login fails
-
-**Address Variables**
-- Created after CEP lookup
-- Required before user creation
-
-### Suggested Execution Order
-
-1. Get address by CEP
-2. Create user
-3. Login
-4. Execute protected endpoints
+* Gradle
 
 ---
 
-## 📘 Swagger Authentication
+## 🌐 External Integrations
 
-1. Execute **Login**
-2. Copy the generated JWT
-3. Click **Authorize**
-4. Paste the token (without `Bearer `)
-5. Authorize
-
-Swagger will attach the token to protected endpoints automatically.
-
----
-
-# 📦 Version Compatibility
-
-This section documents the runtime and infrastructure versions used across the platform.
-
----
-
-## ☕ Java
-
-All services use:
-
-- **Java 17**
-
-Docker base images:
-- `eclipse-temurin:17-jdk-jammy`
-- `maven:3-eclipse-temurin-17`
-- `gradle:jdk17`
-
----
-
-## 🌱 Spring Boot Versions
-
-| Service | Spring Boot Version |
-|----------|---------------------|
-| BFF | 4.0.1 |
-| User Service | 3.5.8 |
-| Task Scheduler Service | 4.0.0 |
-| Notifier Service | 4.0.1 |
-
-> All services are compatible with Java 17.
-
----
-
-## 🐳 Docker
-
-| Component | Version |
-|------------|----------|
-| Docker Engine | 29.1.3 |
-| Docker Compose | Uses Docker Compose V2 (CLI plugin) |
-| PostgreSQL Image | `postgres:14-alpine` |
-| MongoDB Image | `mongo:8` |
-
----
-
-## 🗄 Databases
-
-| Database | Version |
-|-----------|----------|
-| PostgreSQL | 14.20 |
-| MongoDB | 8.2.2 |
-
----
-
-## 🔨 Build Tools
-
-| Service | Build Tool |
-|----------|------------|
-| BFF | Maven |
-| User Service | Gradle |
-| Task Scheduler Service | Gradle |
-| Notifier Service | Gradle |
+* SMTP (email delivery)
+* ViaCep API (Brazilian postal code lookup)
 
 ---
 
 ## 🕒 Time Standard
 
-- All timestamps are stored and processed in **UTC**.
-- Containers rely on the base image timezone configuration.
-
+* All timestamps are stored and processed using UTC.
