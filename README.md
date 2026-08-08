@@ -63,7 +63,7 @@ flowchart TB
             ReverseProxy["Reverse Proxy"]
         Gateway["Gateway Service"]
         User["User Service"]
-        Task["Task Scheduler Service"]
+        Task["Task Service"]
         Notifier["Notifier Service"]
         Postgres[(PostgreSQL)]
         Mongo[(MongoDB)]
@@ -120,7 +120,7 @@ Responsibilities:
 
 ---
 
-### Task Scheduler Service
+### Task Service
 
 Responsible for task lifecycle management and scheduling logic.
 
@@ -273,15 +273,15 @@ Main configuration groups:
 
 # 🐳 Docker Services
 
-| Service        | Container Port | Description                        |
-| -------------- | -------------- | ---------------------------------- |
-| Gateway        | 8083           | Public API entry point             |
-| User           | 8080           | Authentication and user management |
-| Task Scheduler | 8081           | Task management and scheduling     |
-| Notifier       | 8082           | Notification processing            |
-| PostgreSQL     | 5432           | User relational database           |
-| MongoDB        | 27017          | Task document database             |
-| RabbitMQ       | 5672           | Message broker                     |
+| Service       | Container Port | Description                        |
+| ------------- | -------------- | ---------------------------------- |
+| Gateway       | 8083           | Public API entry point             |
+| User          | 8080           | Authentication and user management |
+| Task | 8081           | Task management and scheduling     |
+| Notifier      | 8082           | Notification processing            |
+| PostgreSQL    | 5432           | User relational database           |
+| MongoDB       | 27017          | Task document database             |
+| RabbitMQ      | 5672           | Message broker                     |
 
 Database and messaging services are internal infrastructure components and are not exposed externally.
 
