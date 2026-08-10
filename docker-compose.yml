@@ -51,7 +51,7 @@ services:
     mem_limit: 256m
 
   task:
-    image: ghcr.io/enzobbom/ts-task:sha-63d5188
+    image: ghcr.io/enzobbom/ts-task:sha-3d079d2
     networks:
       - ts-internal
     environment:
