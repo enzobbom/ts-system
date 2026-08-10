@@ -1,0 +1,39 @@
+name: Deploy Task Scheduler
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - 'rabbitmq/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: task-scheduler-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/task-scheduler
+
+            echo "Pulling latest images..."
+            docker compose pull
+
+            echo "Starting updated services..."
+            docker compose up -d
+
+            echo "Deployment completed."
