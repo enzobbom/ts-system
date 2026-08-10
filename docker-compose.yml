@@ -48,7 +48,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    mem_limit: 384m
+    mem_limit: 256m
 
   task:
     image: ghcr.io/enzobbom/ts-task:sha-63d5188
@@ -78,7 +78,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    mem_limit: 384m
+    mem_limit: 256m
 
   notifier:
     image: ghcr.io/enzobbom/ts-notifier:sha-93c2852
@@ -102,7 +102,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    mem_limit: 256m
+    mem_limit: 192m
 
   postgres:
     image: postgres:14-alpine
@@ -121,7 +121,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    mem_limit: 256m
+    mem_limit: 512m
 
   mongo:
     image: mongo:8
@@ -140,7 +140,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    mem_limit: 256m
+    mem_limit: 512m
 
   rabbitmq:
     image: rabbitmq:4-management
