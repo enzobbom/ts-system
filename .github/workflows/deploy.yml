@@ -31,9 +31,9 @@ jobs:
             cd /opt/task-scheduler
 
             echo "Pulling latest images..."
-            docker compose pull
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
 
             echo "Starting updated services..."
-            docker compose up -d
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
 
             echo "Deployment completed."
