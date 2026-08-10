@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.TS_SYSTEM_PAT }}
 
       - name: Read payload
         id: payload
