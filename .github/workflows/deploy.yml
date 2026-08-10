@@ -30,6 +30,9 @@ jobs:
           timeout: 120s
           script: |
             cd /opt/task-scheduler
+            
+            echo "Updating infrastructure repository..." 
+            git pull --ff-only
 
             echo "Pulling latest images..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
