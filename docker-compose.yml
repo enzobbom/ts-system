@@ -2,7 +2,7 @@ name: ts-system
 services:
 
   gateway:
-    image: ghcr.io/enzobbom/ts-gateway:sha-a5e27eb
+    image: ghcr.io/enzobbom/ts-gateway:sha-8d2c644
     networks:
       - ts-internal
     expose:
