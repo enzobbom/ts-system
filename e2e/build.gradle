@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.enzobbom'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    testImplementation 'io.rest-assured:rest-assured:6.0.1'
+
+    testImplementation platform('org.junit:junit-bom:5.14.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testImplementation 'org.awaitility:awaitility:4.3.0'
+    testImplementation 'org.hamcrest:hamcrest:3.0'
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+}
