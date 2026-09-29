@@ -6,6 +6,11 @@ on:
 
 permissions:
   contents: write
+  packages: read
+
+concurrency:
+  group: task-scheduler-image-update
+  cancel-in-progress: false
 
 jobs:
   update-compose:
@@ -17,13 +22,26 @@ jobs:
         with:
           token: ${{ secrets.TS_SYSTEM_PAT }}
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Read payload
         id: payload
         run: |
-          echo "service=${{ github.event.client_payload.service }}" >> $GITHUB_OUTPUT
-          echo "tag=${{ github.event.client_payload.tag }}" >> $GITHUB_OUTPUT
+          echo "service=${{ github.event.client_payload.service }}" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ github.event.client_payload.tag }}" >> "$GITHUB_OUTPUT"
 
-      - name: Update image tag
+      - name: Update candidate image tag
         env:
           SERVICE: ${{ steps.payload.outputs.service }}
           TAG: ${{ steps.payload.outputs.tag }}
@@ -34,10 +52,13 @@ jobs:
             "s|ghcr\\.io/enzobbom/ts-${SERVICE}:sha-[a-z0-9]+|${IMAGE}|g" \
             docker-compose.yml
 
-      - name: Show diff
+      - name: Show candidate diff
         run: git diff
 
-      - name: Commit changes
+      - name: Run system E2E tests
+        run: ./e2e.sh
+
+      - name: Commit accepted image
         env:
           SERVICE: ${{ steps.payload.outputs.service }}
           TAG: ${{ steps.payload.outputs.tag }}
