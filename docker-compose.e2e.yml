@@ -1,0 +1,70 @@
+name: ts-system-e2e
+services:
+  gateway:
+    ports:
+      - "127.0.0.1:8083:8083"
+    restart: "no"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  user:
+    restart: "no"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  task:
+    environment:
+      TS_TASK_NOTIFICATION_TRIGGER_FREQUENCY: "*/10 * * * * *"
+    restart: "no"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  notifier:
+    restart: "no"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  postgres:
+    restart: "no"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "ts_user", "-d", "ts_user" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  mongo:
+    restart: "no"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  rabbitmq:
+    restart: "no"
+    volumes:
+      - ./rabbitmq/definitions.e2e.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
