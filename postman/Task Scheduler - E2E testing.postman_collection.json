@@ -1,0 +1,584 @@
+{
+  "info": {
+    "_postman_id": "1ddc6040-ecb7-4843-abee-f9d94ebb0650",
+    "name": "Task Scheduler - E2E testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50657807",
+    "_collection_link": "https://go.postman.co/collection/50657807-1ddc6040-ecb7-4843-abee-f9d94ebb0650?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Get address by CEP (BR Zip Code)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "",
+              "pm.collectionVariables.set(\"mainAddressStreet\", jsonData.data.street);",
+              "pm.collectionVariables.set(\"mainAddressCity\", jsonData.data.city);",
+              "pm.collectionVariables.set(\"mainAddressNeighbourhood\", jsonData.data.neighbourhood);",
+              "pm.collectionVariables.set(\"mainAddressState\", jsonData.data.state);",
+              "pm.collectionVariables.set(\"mainAddressCep\", jsonData.data.cep);",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/ceps/01012000",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "ceps",
+            "01012000"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Create User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const requiredAddressVariables = [\n    \"mainAddressStreet\",\n    \"mainAddressCity\",\n    \"mainAddressNeighbourhood\",\n    \"mainAddressState\",\n    \"mainAddressCep\"\n];\n\nrequiredAddressVariables.forEach(name => {\n    const value = pm.collectionVariables.get(name);\n\n    if (!value) {\n        throw new Error(\n            `Missing required address variable \"${name}\". \nRun the address retrieval request first.`\n        );\n    }\n});\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\" : \"Test User\",\n    \"email\" : \"{{email}}\",\n    \"password\" : \"{{password}}\",\n    \"address\": {\n      \"street\": \"{{mainAddressStreet}}\",\n      \"number\": \"1234\",\n      \"complement\": \"Some complement\",\n      \"city\": \"{{mainAddressCity}}\",\n      \"neighbourhood\": \"{{mainAddressNeighbourhood}}\",\n      \"state\": \"{{mainAddressState}}\",\n      \"cep\": \"{{mainAddressCep}}\" // brazilian ZIP code\n    },\n  \"phone\": {\n      \"countryCode\": \"\",\n      \"number\": \"55999123456\"\n    }\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        },
+        "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+      },
+      "response": []
+    },
+    {
+      "name": "11 - Delete User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "me"
+          ]
+        },
+        "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Login response status is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    const jsonData = pm.response.json();",
+              "    let token = jsonData.data.token;",
+              "",
+              "    if (token) {",
+              "        pm.collectionVariables.set(\"authToken\", token);",
+              "        console.log(\"Auth token saved.\");",
+              "    } else {",
+              "        pm.collectionVariables.unset(\"authToken\");",
+              "        throw new Error(\"Login succeeded but accessToken not found.\");",
+              "    }",
+              "} else {",
+              "    pm.collectionVariables.unset(\"authToken\");",
+              "    console.log(\"Login failed. Token cleared.\");",
+              "}",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\" : \"{{email}}\", \n    \"password\" : \"{{password}}\"\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Update Authenticated User address",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"complement\" : \"Some other complement\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/me/address",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "me",
+            "address"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Update Authenticated User phone",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"countryCode\" : \"353\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/me/phone",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "me",
+            "phone"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06 - Get Authenticated User",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07 - Create Task for Authenticated User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "",
+              "pm.collectionVariables.set(\"lastCreatedTaskId\", jsonData.data.id);",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\" : \"Another task\",\n\"description\" : \"This is simply a Test task\",\n\"scheduledDateTime\" : \"2026-08-10T23:23:00Z\",   // set a time in the next 1 one hour to get notified by email (UTC time)\n\"timeZoneId\" : \"Europe/Dublin\"}                 // set a valid IANA time zone (e.g.: \"Europe/Amsterdam\")",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08 - Update Task",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\" : \"Better Task Name\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{lastCreatedTaskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks",
+            "{{lastCreatedTaskId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 - Delete Task",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\" : \"Better Task Name\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{lastCreatedTaskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks",
+            "{{lastCreatedTaskId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "09 - Get Tasks of Authenticated User",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          "// public routes (no authentication needed)",
+          "",
+          "const publicRoutes = [",
+          "    { method: \"POST\", path: \"/users\", exact: true }, ",
+          "    { method: \"POST\", path: \"/auth/login\", exact: true },",
+          "    { method: \"GET\", path: \"/ceps\", exact: false } // dynamic: /ceps/{cep}",
+          "];",
+          "",
+          "// details of the current request",
+          "",
+          "const requestMethod = pm.request.method;",
+          "const requestPath = pm.request.url.getPath(); ",
+          "",
+          "// checking if request is public",
+          "",
+          "const isPublic = publicRoutes.some(route => {",
+          "    if (route.method !== requestMethod) return false;",
+          "",
+          "    return route.exact",
+          "        ? requestPath === route.path",
+          "        : requestPath.startsWith(route.path);",
+          "});",
+          "",
+          "// requesting authentication if not",
+          "",
+          "if (!isPublic) {",
+          "    const token = pm.collectionVariables.get(\"authToken\");",
+          "",
+          "    if (!token) {",
+          "        throw new Error(",
+          "            `Authentication required for ${requestMethod} ${requestPath}.",
+          "Please login first.`",
+          "        );",
+          "    }",
+          "",
+          "    pm.request.headers.upsert({",
+          "        key: \"Authorization\",",
+          "        value: `${token}`",
+          "    });",
+          "}",
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "mainAddressStreet",
+      "value": ""
+    },
+    {
+      "key": "mainAddressCity",
+      "value": ""
+    },
+    {
+      "key": "mainAddressNeighbourhood",
+      "value": ""
+    },
+    {
+      "key": "mainAddressState",
+      "value": ""
+    },
+    {
+      "key": "mainAddressCep",
+      "value": ""
+    },
+    {
+      "key": "lastCreatedTaskId",
+      "value": ""
+    }
+  ]
+}

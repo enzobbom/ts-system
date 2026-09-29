@@ -34,11 +34,5 @@ build/
 ### VS Code ###
 .vscode/
 
-### Docker ###
-.env
-
 ### Dev ###
-README-dev.md
-docker-compose.dev.yml
-/rabbitmq/definitions-dev.json
-/postman/
+.env
